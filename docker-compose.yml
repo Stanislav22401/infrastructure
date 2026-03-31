@@ -1,0 +1,54 @@
+version: '3.8'
+
+networks:
+  web:
+    external: true   # Создаётся один раз: docker network create web
+
+services:
+  # Прокси-сервер
+  reverse-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    networks:
+      - web
+
+  # Автоматическое получение и обновление SSL-сертификатов Let's Encrypt
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: acme-companion
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    environment:
+      - DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}
+    depends_on:
+      - reverse-proxy
+    networks:
+      - web
+
+  # ---------- Сайт portfolio ----------
+  portfolio:
+    build:
+      context: ../portfolio      # путь к исходникам portfolio относительно infrastructure
+      dockerfile: Dockerfile
+    container_name: portfolio
+    expose:
+      - "80"
+    environment:
+      - VIRTUAL_HOST=${PORTFOLIO_DOMAIN}
+      - LETSENCRYPT_HOST=${PORTFOLIO_DOMAIN}
+    networks:
+      - web
+    restart: unless-stopped
+
+  # Другие сайты добавляются по аналогии...
