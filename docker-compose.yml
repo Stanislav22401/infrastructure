@@ -25,6 +25,7 @@ services:
       - html:/usr/share/nginx/html
     environment:
       - DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}
+      - NGINX_PROXY_CONTAINER=reverse-proxy
     depends_on:
       - reverse-proxy
     networks:
