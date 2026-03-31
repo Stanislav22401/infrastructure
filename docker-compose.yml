@@ -1,9 +1,3 @@
-version: '3.8'
-
-networks:
-  web:
-    external: true   # Создаётся один раз: docker network create web
-
 services:
   # Прокси-сервер
   reverse-proxy:
@@ -52,3 +46,12 @@ services:
     restart: unless-stopped
 
   # Другие сайты добавляются по аналогии...
+
+networks:
+  web:
+    external: true   # Создаётся один раз: docker network create web
+
+volumes:
+  certs:
+  vhost:
+  html:
